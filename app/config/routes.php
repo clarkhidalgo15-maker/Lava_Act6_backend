@@ -51,6 +51,14 @@ $router->post('/api/auth/login', 'Auth::login');
 $router->post('/api/auth/refresh', 'Auth::refresh');
 $router->post('/api/auth/logout', 'Auth::logout');
 
+$router->get('/api', function () {
+	$api = load_class('Api', 'libraries');
+	$api->respond([
+		'status' => 'ok',
+		'message' => 'LavaLust API is running.',
+	]);
+});
+
 $router->get('/api/products', 'ProductController::index');
 $router->get('/api/products/{id}', 'ProductController::show');
 $router->post('/api/products', 'ProductController::create');
