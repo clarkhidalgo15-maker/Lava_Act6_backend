@@ -2,6 +2,9 @@
 defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
 
 class Auth extends Controller {
+    private const ADMIN_USERNAME = 'admin';
+    private const ADMIN_PASSWORD = 'admin123';
+
     public $db;
     public $api;
 
@@ -83,7 +86,23 @@ class Auth extends Controller {
         );
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        if (!$user && $username === self::ADMIN_USERNAME && hash_equals(self::ADMIN_PASSWORD, $password)) {
+            $this->db->raw(
+                "INSERT INTO users (username, email, password, role, is_active) VALUES (?, ?, ?, 'admin', 1)",
+                [self::ADMIN_USERNAME, 'admin@lavalust.local', password_hash(self::ADMIN_PASSWORD, PASSWORD_BCRYPT)]
+            );
+            $user = $this->db->raw(
+                'SELECT * FROM users WHERE username = ? LIMIT 1',
+                [self::ADMIN_USERNAME]
+            )->fetch(PDO::FETCH_ASSOC);
+        }
+
+        $isStaticAdmin = $user && $user['username'] === self::ADMIN_USERNAME;
+        $validPassword = $isStaticAdmin
+            ? hash_equals(self::ADMIN_PASSWORD, $password)
+            : ($user && password_verify($password, $user['password']));
+
+        if (!$user || !$validPassword) {
             $this->api->respond_error('Invalid credentials.', 401);
         }
 
@@ -93,7 +112,7 @@ class Auth extends Controller {
 
         $tokens = $this->api->issue_tokens([
             'id' => (int) $user['id'],
-            'role' => $user['role'] ?? 'user',
+            'role' => $isStaticAdmin ? 'admin' : ($user['role'] ?? 'user'),
             'scopes' => ['read', 'write', 'delete'],
         ]);
 
@@ -101,7 +120,7 @@ class Auth extends Controller {
             'id' => (int) $user['id'],
             'username' => $user['username'],
             'email' => $user['email'],
-            'role' => $user['role'] ?? 'user',
+            'role' => $isStaticAdmin ? 'admin' : ($user['role'] ?? 'user'),
         ];
 
         $this->api->respond([
