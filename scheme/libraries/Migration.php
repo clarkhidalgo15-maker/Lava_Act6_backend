@@ -311,6 +311,7 @@ EOT;
     {
         $applied = $this->get_applied_migrations();
         $files   = glob($this->migrations_folder . '*.php');
+        $file_versions = [];
 
         $this->line("Migration Status", 'blue');
         echo str_pad("Version", 10) . str_pad("Migration Name", 45) . "Status\n";
@@ -318,11 +319,17 @@ EOT;
 
         foreach ($files as $file) {
             $version = (int) substr(basename($file), 0, 3);
+            $file_versions[] = $version;
             $name    = basename($file);
             $status  = in_array($version, $applied) ? "APPLIED" : "PENDING";
             $color   = in_array($version, $applied) ? 'green' : 'yellow';
 
             echo str_pad($version, 10) . str_pad($name, 45) . $this->color($status, $color) . "\n";
+        }
+
+        $orphaned_versions = array_diff(array_map('intval', $applied), $file_versions);
+        if (!empty($orphaned_versions)) {
+            $this->warning('Applied migration records with no local file: ' . implode(', ', $orphaned_versions));
         }
     }
 
@@ -339,10 +346,14 @@ EOT;
     protected function get_latest_migration_version()
     {
         $files = glob($this->migrations_folder . '*.php');
-        if (empty($files)) return 0;
+        $file_versions = empty($files)
+            ? [0]
+            : array_map(fn($file) => (int) substr(basename($file), 0, 3), $files);
+        $applied_version = (int) $this->_lava->db
+            ->raw("SELECT MAX(migration) FROM `{$this->migration_table}`")
+            ->fetchColumn();
 
-        $versions = array_map(fn($f) => (int) substr(basename($f), 0, 3), $files);
-        return max($versions);
+        return max(max($file_versions), $applied_version);
     }
 
     /**

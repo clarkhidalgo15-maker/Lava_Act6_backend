@@ -474,7 +474,9 @@ if ( ! function_exists('handle_cors'))
 	 */
 	function handle_cors()
 	{
-		$allow_origin = config_item('allow_origin');
+		$config = load_class('Config', 'kernel');
+		$config->load('api');
+		$allow_origin = $config->get('allow_origin') ?: '*';
 		$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
 		if (is_array($allow_origin)) {

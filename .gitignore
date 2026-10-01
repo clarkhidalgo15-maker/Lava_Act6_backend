@@ -9,6 +9,8 @@
 vendor/
 app/vendor/
 composer.lock
+Lavafrontend/node_modules/
+Lavafrontend/dist/
 
 # Cache & Logs
 runtime/*

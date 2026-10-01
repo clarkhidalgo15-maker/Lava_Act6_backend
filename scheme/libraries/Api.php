@@ -175,18 +175,19 @@ class Api
      */
     public function body()
     {
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-
-        if (stripos($contentType, 'application/json') !== false) {
-            $input = json_decode(file_get_contents('php://input'), true);
-            return is_array($input) ? $this->sanitize_input($input) : [];
+        $rawInput = file_get_contents('php://input');
+        if ($rawInput !== '') {
+            $jsonInput = json_decode($rawInput, true);
+            if (is_array($jsonInput)) {
+                return $this->sanitize_input($jsonInput);
+            }
         }
 
         if ($_POST) {
             return $this->sanitize_input($_POST);
         }
 
-        parse_str(file_get_contents('php://input'), $formData);
+        parse_str($rawInput, $formData);
         return $this->sanitize_input($formData ?? []);
     }
 
@@ -210,7 +211,7 @@ class Api
     {
         array_walk_recursive($data, function(&$value) {
             if (is_string($value)) {
-                $value = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $value = trim($value);
             }
         });
         return $data;

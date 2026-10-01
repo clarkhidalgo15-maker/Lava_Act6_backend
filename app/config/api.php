@@ -75,7 +75,7 @@ $config['refresh_token_expiration'] = 604800;
 | Used for Securing endpoint
 |
 */
-$config['jwt_secret'] = 'cbTsnJDxCodakDxh4M3qd5Sn3Kd2cYCDp4MEu0DAPxx';
+$config['jwt_secret'] = getenv('JWT_SECRET') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +85,7 @@ $config['jwt_secret'] = 'cbTsnJDxCodakDxh4M3qd5Sn3Kd2cYCDp4MEu0DAPxx';
 | Used for Securing endpoint
 |
 */
-$config['refresh_token_key'] = '0bNvxjPFJ6dhi1Ttf7AStp95zUcd1iy94mjblklwfPs';
+$config['refresh_token_key'] = getenv('REFRESH_TOKEN_KEY') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -96,7 +96,7 @@ $config['refresh_token_key'] = '0bNvxjPFJ6dhi1Ttf7AStp95zUcd1iy94mjblklwfPs';
 | already deployed.
 |
 */
-$config['allow_origin'] = '*';
+$config['allow_origin'] = getenv('CORS_ALLOWED_ORIGIN') ?: '*';
 
 /*
 |--------------------------------------------------------------------------
